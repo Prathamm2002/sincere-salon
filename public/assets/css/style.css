@@ -197,7 +197,9 @@ a:hover { color: var(--brass-500); }
   position: relative;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.55rem;
+  min-height: 44px;          /* Was landing at 43px */
   padding: 0.85rem 2rem;
   background: var(--grad-brass);
   color: var(--ink-900);
@@ -235,7 +237,9 @@ a:hover { color: var(--brass-500); }
 .btn-ghost {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.55rem;
+  min-height: 44px;
   padding: 0.85rem 2rem;
   background: transparent;
   color: var(--paper);
@@ -345,6 +349,7 @@ a:hover { color: var(--brass-500); }
   display: flex;
   align-items: center;
   gap: 0.7rem;
+  min-height: 44px;
   color: var(--paper);
 }
 .brand:hover { color: var(--paper); }
@@ -728,7 +733,10 @@ a:hover { color: var(--brass-500); }
   margin-bottom: 3rem;
 }
 .cat-tab {
-  padding: 0.6rem 1.5rem;
+  /* 44px minimum height: the WCAG target-size floor, and what a thumb
+     actually needs. These were 35px, which is a miss on a phone. */
+  min-height: 44px;
+  padding: 0.7rem 1.5rem;
   font-size: 0.78rem;
   font-weight: 600;
   letter-spacing: 0.1em;
@@ -923,8 +931,11 @@ a:hover { color: var(--brass-500); }
 .cart-item .nm { font-size: 0.92rem; }
 .cart-item .dur { display: block; font-size: 0.74rem; color: var(--muted); }
 .cart-item .pr { font-family: var(--font-display); font-size: 1.15rem; color: var(--brass-400); }
+/* 34px box with a 44px touch area extended by the pseudo-element below, so
+   the control stays visually small without being hard to hit. */
 .cart-remove {
-  width: 26px; height: 26px;
+  width: 34px; height: 34px;
+  position: relative;
   display: grid; place-items: center;
   color: var(--muted);
   background: none;
@@ -934,6 +945,11 @@ a:hover { color: var(--brass-500); }
   transition: all var(--dur-fast) var(--ease);
 }
 .cart-remove:hover { color: var(--danger); border-color: var(--danger); }
+.cart-remove::after {
+  content: '';
+  position: absolute;
+  inset: -5px;              /* 34 + 10 = 44px effective target */
+}
 
 .cart-empty {
   padding: 2.5rem 1rem;
@@ -965,6 +981,7 @@ a:hover { color: var(--brass-500); }
 .date-chip {
   flex-shrink: 0;
   width: 68px;
+  min-height: 64px;
   padding: 0.7rem 0;
   text-align: center;
   background: rgba(255, 255, 255, 0.03);
@@ -991,7 +1008,8 @@ a:hover { color: var(--brass-500); }
   gap: 0.6rem;
 }
 .slot {
-  padding: 0.65rem 0.4rem;
+  min-height: 44px;
+  padding: 0.7rem 0.4rem;
   font-size: 0.85rem;
   font-weight: 500;
   color: var(--paper);
@@ -1356,6 +1374,15 @@ a:hover { color: var(--brass-500); }
 }
 .map-frame:hover { filter: none; }
 
+/* Footer nav links are deliberate targets, not inline prose - give them room.
+   (Links inside a sentence are exempt from the 44px rule and are left alone,
+   so the body copy keeps its natural rhythm.) */
+.site-footer ul.list-unstyled a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
 .site-footer {
   padding: 4rem 0 2rem;
   background: var(--ink-800);
@@ -1375,6 +1402,9 @@ a:hover { color: var(--brass-500); }
   right: 1.4rem; bottom: 1.4rem;
   z-index: 1020;
   width: 56px; height: 56px;
+  /* Hidden while the hero is on screen - see .fab.tucked below. */
+  transition: transform var(--dur) var(--ease), opacity var(--dur) var(--ease),
+              box-shadow var(--dur-fast) var(--ease);
   display: grid; place-items: center;
   color: var(--ink-900);
   background: var(--grad-brass);
@@ -1388,6 +1418,19 @@ a:hover { color: var(--brass-500); }
   color: var(--ink-900);
   transform: scale(1.08) translateY(-2px);
   box-shadow: var(--glow-brass), var(--shadow-md);
+}
+
+/*
+ * While the hero is in view the floating call button is tucked away. On a
+ * narrow screen it sits exactly on top of the full-width "Book Your Chair"
+ * button, covering the primary action on the most important screen of the
+ * site. The hero already offers both a call link in the nav and its own CTA,
+ * so nothing is lost; the button returns as soon as the hero scrolls away.
+ */
+.fab.tucked {
+  opacity: 0;
+  transform: scale(0.6) translateY(12px);
+  pointer-events: none;
 }
 
 
@@ -1475,7 +1518,26 @@ a:hover { color: var(--brass-500); }
 }
 
 @media (max-width: 575.98px) {
-  .hero-inner { padding: 6rem 1rem 4rem; }
+  /* Tighter hero so the CTAs stay above the fold on a 640px-tall handset:
+     the headline was taking four lines and pushing them to the very edge. */
+  .hero-inner { padding: 5rem 1rem 5rem; }
+  .hero h1 { font-size: clamp(2.4rem, 12vw, 3.2rem); }
+  .hero-sub { margin-bottom: 1.8rem; font-size: 0.95rem; }
+  .hero-eyebrow { margin-bottom: 1.1rem; }
+  .hero-hindi { margin-bottom: 1.1rem; }
+
+  /* 11.5px is too small to read comfortably on a phone. These are all
+     uppercase micro-labels, so they were the worst offenders. */
+  .hero-eyebrow,
+  .status-pill,
+  .section-label,
+  .stat .lbl,
+  .info-row h4,
+  .review-author small,
+  .flip-hint,
+  .field label { font-size: 0.75rem; }
+
+  .fab { width: 50px; height: 50px; right: 1rem; bottom: 1rem; }
   .hero-cta { flex-direction: column; align-items: stretch; }
   .btn-brass, .btn-ghost { justify-content: center; }
   .rating-summary { flex-direction: column; gap: 0.5rem; text-align: center; }

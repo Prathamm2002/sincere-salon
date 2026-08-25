@@ -1258,6 +1258,28 @@ function initContactForm() {
 }
 
 
+/**
+ * Hide the floating call button while the hero is on screen.
+ *
+ * On a narrow viewport the fixed button lands directly on top of the
+ * full-width "Book Your Chair" CTA. Rather than move the button somewhere
+ * worse, it simply stays out of the way until the hero has scrolled past —
+ * the hero has its own call-to-action and the nav has a phone link, so the
+ * visitor is never without a way to reach the salon.
+ */
+function initFabVisibility() {
+  const fab = $('.fab');
+  const hero = $('#hero');
+  if (!fab || !hero) return;
+
+  const io = new IntersectionObserver(
+    ([entry]) => fab.classList.toggle('tucked', entry.intersectionRatio > 0.35),
+    { threshold: [0, 0.35, 1] }
+  );
+  io.observe(hero);
+}
+
+
 /* ==========================================================================
    13. HERO WebGL BOOTSTRAP
    --------------------------------------------------------------------------
@@ -1316,6 +1338,7 @@ function init() {
   initParallax();
   initTilt();
   initServiceSelection();
+  initFabVisibility();
   initBooking();
   initReviewForm();
   initContactForm();
