@@ -1,6 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
 
+  "//": [
+    "No build step: `public/` is served as static files and each file in",
+    "`api/` becomes one serverless function. That is 8 functions, within the",
+    "12-per-deployment limit the Hobby plan applies to non-framework projects."
+  ],
+
   "outputDirectory": "public",
 
   "functions": {
