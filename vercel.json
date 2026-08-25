@@ -1,20 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-
-  "//": [
-    "No build step: `public/` is served as static files and each file in",
-    "`api/` becomes one serverless function. That is 8 functions, within the",
-    "12-per-deployment limit the Hobby plan applies to non-framework projects."
-  ],
-
   "outputDirectory": "public",
-
   "functions": {
     "api/**/*.js": {
       "maxDuration": 10
     }
   },
-
   "headers": [
     {
       "source": "/(.*)",
@@ -25,14 +16,12 @@
       ]
     },
     {
-      "//": "Hashed-free static assets: revalidate often enough that edits show up.",
       "source": "/assets/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
       ]
     },
     {
-      "//": "The API must never be cached — availability changes by the minute.",
       "source": "/api/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "no-store" }
