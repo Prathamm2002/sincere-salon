@@ -1,0 +1,1524 @@
+/* ==========================================================================
+   Sincere Men's Salon — Stylesheet
+   --------------------------------------------------------------------------
+   Layered on top of Bootstrap 5. Bootstrap supplies the grid, the modal and
+   the form reset; everything visual below is custom.
+
+   Contents
+     01. Design tokens
+     02. Base & typography
+     03. Utilities
+     04. Preloader
+     05. Navigation
+     06. Hero (WebGL canvas layer)
+     07. Section furniture
+     08. 3D tilt cards
+     09. Services
+     10. Booking flow
+     11. Reviews
+     12. Gallery & parallax
+     13. Contact & footer
+     14. Toasts
+     15. Responsive
+     16. Motion & print preferences
+   ========================================================================== */
+
+
+/* ==========================================================================
+   01. DESIGN TOKENS
+   Every colour, shadow and easing curve is declared once here.
+   ========================================================================== */
+
+:root {
+  /* Palette — charcoal barbershop with a warm brass accent */
+  --ink-900: #08090c;
+  --ink-800: #0d0f14;
+  --ink-700: #12151c;
+  --ink-600: #191d26;
+  --ink-500: #232833;
+
+  --brass-400: #f0c274;
+  --brass-500: #d9a441;
+  --brass-600: #b8862c;
+
+  --paper: #f5f2ec;
+  --muted: #9aa1ad;
+  --line: rgba(255, 255, 255, 0.08);
+
+  --success: #4ade80;
+  --danger: #f87171;
+
+  /* Gradients */
+  --grad-brass: linear-gradient(135deg, var(--brass-400) 0%, var(--brass-600) 100%);
+  --grad-glass: linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.015));
+
+  /* Type
+     The display stack lists several condensed faces before the generic
+     sans-serif. Bebas Neue is very narrow, so if it fails to load a normal-
+     width fallback would set the headline far wider than the layout expects —
+     these keep the substitute close to the intended metrics. */
+  --font-display: 'Bebas Neue', 'Oswald', 'Arial Narrow', 'Haettenschweiler',
+                  'Impact', sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* Elevation */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.6);
+  --glow-brass: 0 0 32px rgba(217, 164, 65, 0.28);
+
+  /* Motion — one easing curve everywhere keeps the site feeling coherent */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 0.2s;
+  --dur: 0.45s;
+  --dur-slow: 0.9s;
+
+  --radius: 16px;
+  --nav-h: 76px;
+}
+
+
+/* ==========================================================================
+   02. BASE & TYPOGRAPHY
+   ========================================================================== */
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  /* Anchor links stop below the fixed navbar instead of under it. */
+  scroll-padding-top: var(--nav-h);
+}
+
+body {
+  margin: 0;
+  background: var(--ink-900);
+  color: var(--paper);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.65;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Locks scrolling while the preloader or a modal is up. */
+body.is-locked { overflow: hidden; }
+
+h1, h2, h3, .display-font {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 1.05;
+  margin: 0;
+}
+
+a {
+  color: var(--brass-400);
+  text-decoration: none;
+  transition: color var(--dur-fast) var(--ease);
+}
+a:hover { color: var(--brass-500); }
+
+::selection {
+  background: var(--brass-500);
+  color: var(--ink-900);
+}
+
+/* Focus ring — visible for keyboard users, invisible for mouse users. */
+:focus-visible {
+  outline: 2px solid var(--brass-400);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Custom scrollbar (WebKit) */
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: var(--ink-900); }
+::-webkit-scrollbar-thumb {
+  background: var(--ink-500);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--brass-600); }
+
+
+/* ==========================================================================
+   03. UTILITIES
+   ========================================================================== */
+
+.text-brass { color: var(--brass-400) !important; }
+.bg-ink { background: var(--ink-800); }
+
+/* Screen-reader-only, but focusable — used by the skip link. */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.skip-link:focus {
+  position: fixed;
+  top: 12px; left: 12px;
+  width: auto; height: auto;
+  clip: auto;
+  z-index: 2000;
+  padding: 12px 20px;
+  background: var(--brass-500);
+  color: var(--ink-900);
+  font-weight: 700;
+  border-radius: 8px;
+}
+
+/* Honeypot field — hidden from humans, filled by bots. Not display:none,
+   because some bots skip those. */
+.hp-field {
+  position: absolute !important;
+  left: -9999px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Frosted-glass surface, reused by cards, the navbar and the booking panel. */
+.glass {
+  background: var(--grad-glass);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+/* --- Buttons -------------------------------------------------------------- */
+
+.btn-brass {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.85rem 2rem;
+  background: var(--grad-brass);
+  color: var(--ink-900);
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform var(--dur-fast) var(--ease),
+              box-shadow var(--dur-fast) var(--ease);
+}
+.btn-brass:hover {
+  color: var(--ink-900);
+  transform: translateY(-2px);
+  box-shadow: var(--glow-brass);
+}
+.btn-brass:active { transform: translateY(0); }
+.btn-brass:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+/* Sheen that sweeps across the button on hover. */
+.btn-brass::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 -60%;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent);
+  transform: skewX(-20deg);
+  transition: left var(--dur-slow) var(--ease);
+}
+.btn-brass:hover::after { left: 120%; }
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.85rem 2rem;
+  background: transparent;
+  color: var(--paper);
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease);
+}
+.btn-ghost:hover {
+  color: var(--ink-900);
+  background: var(--paper);
+  border-color: var(--paper);
+}
+
+
+/* ==========================================================================
+   04. PRELOADER
+   Covers the first paint while fonts and the WebGL scene initialise.
+   ========================================================================== */
+
+#preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  background: var(--ink-900);
+  transition: opacity 0.6s var(--ease), visibility 0.6s;
+}
+#preloader.done {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.loader-mark {
+  text-align: center;
+}
+.loader-mark .scissors {
+  width: 54px; height: 54px;
+  margin: 0 auto 1.25rem;
+  color: var(--brass-400);
+  animation: snip 1.4s var(--ease) infinite;
+  transform-origin: center;
+}
+.loader-mark span {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  letter-spacing: 0.3em;
+  color: var(--muted);
+}
+
+@keyframes snip {
+  0%, 100% { transform: rotate(-8deg) scale(1); }
+  50%      { transform: rotate(8deg) scale(1.08); }
+}
+
+.loader-bar {
+  width: 180px; height: 2px;
+  margin: 1.5rem auto 0;
+  background: var(--ink-500);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.loader-bar i {
+  display: block;
+  height: 100%;
+  width: 40%;
+  background: var(--grad-brass);
+  animation: slide 1.2s var(--ease) infinite;
+}
+@keyframes slide {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(350%); }
+}
+
+
+/* ==========================================================================
+   05. NAVIGATION
+   ========================================================================== */
+
+.site-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 1030;
+  height: var(--nav-h);
+  display: flex;
+  align-items: center;
+  background: transparent;
+  transition: background var(--dur) var(--ease),
+              backdrop-filter var(--dur) var(--ease),
+              box-shadow var(--dur) var(--ease);
+}
+/* .scrolled is toggled by JS past 60px of scroll. */
+.site-nav.scrolled {
+  background: rgba(8, 9, 12, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 1px 0 var(--line), var(--shadow-sm);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  color: var(--paper);
+}
+.brand:hover { color: var(--paper); }
+.brand svg { width: 34px; height: 34px; color: var(--brass-400); }
+.brand-text b {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+.brand-text small {
+  display: block;
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.nav-links a {
+  position: relative;
+  color: var(--paper);
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.4rem 0;
+}
+/* Underline grows from the left on hover and stays for the active section. */
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  left: 0; bottom: 0;
+  width: 0; height: 2px;
+  background: var(--grad-brass);
+  transition: width var(--dur) var(--ease);
+}
+.nav-links a:hover::after,
+.nav-links a.active::after { width: 100%; }
+.nav-links a.active { color: var(--brass-400); }
+
+/* Live open/closed pill */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.3rem 0.85rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.04);
+  white-space: nowrap;
+}
+.status-pill .dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+.status-pill.open .dot {
+  background: var(--success);
+  box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.6);
+  animation: pulse 2s infinite;
+}
+.status-pill.closed .dot { background: var(--danger); }
+
+@keyframes pulse {
+  70%  { box-shadow: 0 0 0 8px rgba(74, 222, 128, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+}
+
+/* Hamburger — three bars that morph into an X */
+.nav-toggle {
+  display: none;
+  width: 44px; height: 44px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  padding: 10px;
+}
+.nav-toggle span {
+  display: block;
+  height: 2px;
+  background: var(--paper);
+  border-radius: 2px;
+  transition: transform var(--dur) var(--ease), opacity var(--dur-fast);
+}
+.nav-toggle span + span { margin-top: 6px; }
+.nav-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+.nav-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+.nav-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+
+
+/* ==========================================================================
+   06. HERO
+   The WebGL canvas sits behind the copy; both share a stacking context so the
+   text always wins regardless of what the scene renders.
+   ========================================================================== */
+
+.hero {
+  position: relative;
+  min-height: 100svh;      /* svh avoids the mobile-browser URL-bar jump */
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+#hero-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Vignette + bottom fade so text stays readable over any frame of the scene. */
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse at 50% 40%, transparent 0%, rgba(8,9,12,0.55) 70%, var(--ink-900) 100%),
+    linear-gradient(to bottom, transparent 60%, var(--ink-900) 100%);
+  pointer-events: none;
+}
+
+.hero-inner {
+  text-align: center;
+  /* Generous bottom padding keeps the rating badge clear of the scroll cue
+     and the floating call button. */
+  padding: 7rem 1.25rem 8rem;
+  max-width: 1040px;
+}
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+  padding: 0.4rem 1.1rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--brass-400);
+  border: 1px solid rgba(217, 164, 65, 0.3);
+  border-radius: 999px;
+  background: rgba(217, 164, 65, 0.07);
+}
+
+.hero h1 {
+  /* Capped at 6.5rem rather than 8rem so each line still fits on one row when
+     a wider fallback face is substituted for Bebas Neue. */
+  font-size: clamp(2.9rem, 9vw, 6.5rem);
+  margin-bottom: 0.4rem;
+  text-wrap: balance;
+}
+.hero h1 .line { display: block; }
+/* The brass line gets a subtle metallic gradient fill. */
+.hero h1 .fill {
+  background: var(--grad-brass);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero-hindi {
+  font-size: clamp(0.95rem, 2.5vw, 1.3rem);
+  color: var(--muted);
+  letter-spacing: 0.18em;
+  margin-bottom: 1.5rem;
+}
+
+.hero-sub {
+  max-width: 560px;
+  margin: 0 auto 2.5rem;
+  color: rgba(245, 242, 236, 0.75);
+  font-size: clamp(0.98rem, 2vw, 1.12rem);
+}
+
+.hero-cta {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Rating badge under the CTAs */
+.hero-rating {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;          /* Wraps instead of clipping on narrow screens */
+  gap: 0.6rem;
+  max-width: 100%;
+  margin-top: 2.5rem;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.85rem;
+  color: rgba(245, 242, 236, 0.8);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line);
+}
+.hero-rating strong { color: var(--brass-400); font-size: 1.05rem; }
+.stars { color: var(--brass-400); letter-spacing: 0.1em; }
+
+/* Scroll cue */
+.scroll-cue {
+  position: absolute;
+  bottom: 2rem; left: 50%;
+  transform: translateX(-50%);
+  display: grid;
+  place-items: center;
+  gap: 0.5rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.scroll-cue .track {
+  width: 22px; height: 36px;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
+  position: relative;
+}
+.scroll-cue .track::before {
+  content: '';
+  position: absolute;
+  top: 7px; left: 50%;
+  width: 3px; height: 7px;
+  margin-left: -1.5px;
+  background: var(--brass-400);
+  border-radius: 2px;
+  animation: wheel 1.8s var(--ease) infinite;
+}
+@keyframes wheel {
+  0%   { opacity: 0; transform: translateY(0); }
+  35%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(12px); }
+}
+
+
+/* ==========================================================================
+   07. SECTION FURNITURE
+   ========================================================================== */
+
+.section {
+  position: relative;
+  padding: 6.5rem 0;
+}
+.section-head {
+  text-align: center;
+  max-width: 660px;
+  margin: 0 auto 3.5rem;
+}
+.section-label {
+  display: inline-block;
+  margin-bottom: 0.9rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--brass-500);
+}
+.section-head h2 {
+  font-size: clamp(2.2rem, 6vw, 3.8rem);
+  margin-bottom: 1rem;
+}
+.section-head p {
+  color: var(--muted);
+  margin: 0;
+}
+
+/* Hairline divider with a diamond at the centre. */
+.rule {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1.2rem auto 0;
+  max-width: 220px;
+  color: var(--brass-500);
+}
+.rule::before,
+.rule::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--brass-600), transparent);
+}
+
+/* --- Scroll reveal -------------------------------------------------------
+   Elements start shifted and transparent; IntersectionObserver adds .in-view.
+   Transition only transform/opacity so it stays on the compositor. */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s var(--ease), transform 0.7s var(--ease);
+  will-change: transform, opacity;
+}
+[data-reveal].in-view {
+  opacity: 1;
+  transform: none;
+}
+/* Stagger children by index, set as --i in the markup. */
+[data-reveal][style*="--i"] { transition-delay: calc(var(--i) * 80ms); }
+
+
+/* ==========================================================================
+   08. 3D TILT CARDS
+   The wrapper owns the perspective; the inner element does the rotating, with
+   the angles fed in by JS as --rx / --ry custom properties.
+   ========================================================================== */
+
+.tilt {
+  perspective: 900px;
+  transform-style: preserve-3d;
+}
+.tilt-inner {
+  position: relative;
+  height: 100%;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transform-style: preserve-3d;
+  transition: transform 0.35s var(--ease), box-shadow 0.35s var(--ease);
+}
+.tilt:hover .tilt-inner {
+  box-shadow: var(--shadow-lg);
+  transition-duration: 0.1s;   /* Snappier while tracking the cursor */
+}
+
+/* Glare that follows the pointer across the card face. */
+.tilt-glare {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    circle at var(--mx, 50%) var(--my, 50%),
+    rgba(255, 255, 255, 0.16),
+    transparent 55%
+  );
+  opacity: 0;
+  transition: opacity var(--dur) var(--ease);
+  pointer-events: none;
+}
+.tilt:hover .tilt-glare { opacity: 1; }
+
+/* Push content forward in Z so it lifts off the card while tilting.
+   Also a flex column, so cards in a row can push their footer to the bottom
+   and stay aligned even when titles wrap to different line counts. */
+/* 20px rather than 38px: under the 900px perspective a larger offset scales
+   the content up enough that it drifts out from under the cursor mid-click. */
+.tilt-layer {
+  transform: translateZ(20px);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+
+/* ==========================================================================
+   09. SERVICES
+   ========================================================================== */
+
+.cat-tabs {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 3rem;
+}
+.cat-tab {
+  padding: 0.6rem 1.5rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease);
+}
+.cat-tab:hover { color: var(--paper); border-color: rgba(255,255,255,0.25); }
+.cat-tab.active {
+  color: var(--ink-900);
+  background: var(--grad-brass);
+  border-color: transparent;
+}
+
+.service-card {
+  height: 100%;
+  padding: 1.9rem 1.6rem;
+  cursor: pointer;
+}
+.service-card.signature {
+  border-color: rgba(217, 164, 65, 0.35);
+  background: linear-gradient(145deg, rgba(217,164,65,0.11), rgba(255,255,255,0.015));
+}
+
+.service-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.7rem;
+}
+.service-card h3 {
+  font-size: 1.5rem;
+  letter-spacing: 0.03em;
+}
+.service-price {
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  color: var(--brass-400);
+  line-height: 1;
+}
+.service-card p {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-bottom: 1.1rem;
+}
+
+.service-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* margin-top:auto pushes the footer to the bottom of the flex column, so
+     every card in a row lines its meta strip up regardless of title length. */
+  margin-top: auto;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.badge-signature {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-900);
+  background: var(--grad-brass);
+  border-radius: 4px;
+}
+/* The add affordance is always visible — it is the primary action on the card.
+   Hiding it until :hover meant it was invisible on every touch device, and it
+   vanished the moment the card lost hover. Hover only brightens it. */
+.add-hint {
+  color: var(--brass-400);
+  font-weight: 700;
+  opacity: 0.75;
+  padding: 0.2rem 0.7rem;
+  border: 1px solid rgba(217, 164, 65, 0.4);
+  border-radius: 999px;
+  transition: opacity var(--dur-fast) var(--ease),
+              background var(--dur-fast) var(--ease),
+              color var(--dur-fast) var(--ease);
+}
+.service-card:hover .add-hint {
+  opacity: 1;
+  color: var(--ink-900);
+  background: var(--grad-brass);
+  border-color: transparent;
+}
+
+/* Selected state — mirrors the booking cart. */
+.service-card.selected {
+  border-color: var(--brass-500);
+  box-shadow: inset 0 0 0 1px var(--brass-500), var(--glow-brass);
+}
+.service-card.selected .add-hint {
+  opacity: 1;
+  color: var(--ink-900);
+  background: var(--grad-brass);
+  border-color: transparent;
+}
+
+
+/* ==========================================================================
+   10. BOOKING FLOW
+   ========================================================================== */
+
+.booking-panel { padding: 2.2rem; }
+
+/* Step indicator */
+.steps {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2.2rem;
+}
+.step {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.step .num {
+  display: grid;
+  place-items: center;
+  width: 30px; height: 30px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  transition: all var(--dur) var(--ease);
+}
+.step.active .num,
+.step.done .num {
+  color: var(--ink-900);
+  background: var(--grad-brass);
+  border-color: transparent;
+}
+.step.active { color: var(--paper); }
+/* Connector line between steps. */
+.step-line {
+  flex: 1;
+  height: 1px;
+  margin: 0 0.8rem;
+  background: var(--line);
+  position: relative;
+  overflow: hidden;
+}
+.step-line::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--grad-brass);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--dur-slow) var(--ease);
+}
+.step-line.filled::after { transform: scaleX(1); }
+
+/* Panes slide horizontally between steps. */
+.step-pane { display: none; animation: paneIn 0.45s var(--ease); }
+.step-pane.active { display: block; }
+@keyframes paneIn {
+  from { opacity: 0; transform: translateX(18px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* --- Cart ---------------------------------------------------------------- */
+.cart-list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.cart-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--line);
+  animation: paneIn 0.3s var(--ease);
+}
+.cart-item .nm { font-size: 0.92rem; }
+.cart-item .dur { display: block; font-size: 0.74rem; color: var(--muted); }
+.cart-item .pr { font-family: var(--font-display); font-size: 1.15rem; color: var(--brass-400); }
+.cart-remove {
+  width: 26px; height: 26px;
+  display: grid; place-items: center;
+  color: var(--muted);
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease);
+}
+.cart-remove:hover { color: var(--danger); border-color: var(--danger); }
+
+.cart-empty {
+  padding: 2.5rem 1rem;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.cart-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-top: 1rem;
+  margin-bottom: 1.5rem;
+  border-top: 1px solid var(--brass-600);
+}
+.cart-total .lbl { font-size: 0.78rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.cart-total .amt { font-family: var(--font-display); font-size: 2.2rem; color: var(--brass-400); }
+
+/* --- Date & slot picking -------------------------------------------------- */
+.date-strip {
+  display: flex;
+  gap: 0.6rem;
+  overflow-x: auto;
+  padding-bottom: 0.8rem;
+  margin-bottom: 1.6rem;
+  scrollbar-width: thin;
+}
+.date-chip {
+  flex-shrink: 0;
+  width: 68px;
+  padding: 0.7rem 0;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease);
+}
+.date-chip:hover { border-color: rgba(255,255,255,0.28); transform: translateY(-2px); }
+.date-chip .dow { display: block; font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.date-chip .dom { display: block; font-family: var(--font-display); font-size: 1.5rem; line-height: 1.2; }
+.date-chip .mon { display: block; font-size: 0.64rem; color: var(--muted); }
+.date-chip.active {
+  color: var(--ink-900);
+  background: var(--grad-brass);
+  border-color: transparent;
+}
+.date-chip.active .dow,
+.date-chip.active .mon { color: rgba(8, 9, 12, 0.7); }
+
+.slot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: 0.6rem;
+}
+.slot {
+  padding: 0.65rem 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--paper);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease);
+}
+.slot:hover:not(:disabled) { border-color: var(--brass-500); transform: translateY(-2px); }
+.slot.active {
+  color: var(--ink-900);
+  background: var(--grad-brass);
+  border-color: transparent;
+  font-weight: 700;
+}
+.slot:disabled {
+  color: var(--ink-500);
+  cursor: not-allowed;
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+/* --- Form fields --------------------------------------------------------- */
+.field { margin-bottom: 1.2rem; }
+.field label {
+  display: block;
+  margin-bottom: 0.45rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.field input,
+.field textarea,
+.field select {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  color: var(--paper);
+  font-family: inherit;
+  font-size: 0.95rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  transition: border-color var(--dur-fast) var(--ease),
+              box-shadow var(--dur-fast) var(--ease);
+}
+.field input::placeholder,
+.field textarea::placeholder { color: rgba(154, 161, 173, 0.6); }
+.field input:focus,
+.field textarea:focus,
+.field select:focus {
+  outline: none;
+  border-color: var(--brass-500);
+  box-shadow: 0 0 0 3px rgba(217, 164, 65, 0.14);
+}
+.field textarea { resize: vertical; min-height: 96px; }
+
+/* Validation error, painted by JS from the API's `errors` map. */
+.field.invalid input,
+.field.invalid textarea { border-color: var(--danger); }
+.field .err {
+  display: none;
+  margin-top: 0.35rem;
+  font-size: 0.78rem;
+  color: var(--danger);
+}
+.field.invalid .err { display: block; }
+
+/* --- Confirmation -------------------------------------------------------- */
+.confirm-box { text-align: center; padding: 1rem 0; }
+.confirm-tick {
+  width: 74px; height: 74px;
+  margin: 0 auto 1.4rem;
+  display: grid; place-items: center;
+  color: var(--success);
+  border: 2px solid var(--success);
+  border-radius: 50%;
+  animation: pop 0.5s var(--ease);
+}
+@keyframes pop {
+  0%   { transform: scale(0.4); opacity: 0; }
+  60%  { transform: scale(1.12); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.confirm-ref {
+  display: inline-block;
+  margin: 0.5rem 0 1.4rem;
+  padding: 0.7rem 1.6rem;
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  letter-spacing: 0.18em;
+  color: var(--brass-400);
+  background: rgba(217, 164, 65, 0.09);
+  border: 1px dashed var(--brass-600);
+  border-radius: 10px;
+}
+
+
+/* ==========================================================================
+   11. REVIEWS
+   Cards flip on the Y axis to reveal the full text on the back face.
+   ========================================================================== */
+
+.rating-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 1.1rem 2rem;
+  margin-bottom: 3rem;
+  border-radius: var(--radius);
+}
+.rating-summary .big {
+  font-family: var(--font-display);
+  font-size: 3.4rem;
+  line-height: 1;
+  color: var(--brass-400);
+}
+.rating-summary .meta { text-align: left; font-size: 0.82rem; color: var(--muted); }
+
+.flip {
+  perspective: 1200px;
+  height: 290px;
+}
+.flip-inner {
+  position: relative;
+  width: 100%; height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.7s var(--ease);
+}
+/* Flip on hover (desktop) or when JS adds .flipped (tap on touch devices). */
+.flip:hover .flip-inner,
+.flip.flipped .flip-inner { transform: rotateY(180deg); }
+
+.flip-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /* Extra bottom padding leaves room for the absolutely-positioned
+     "Read →" hint so it never sits on top of the author line. */
+  padding: 1.8rem 1.8rem 2.6rem;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: var(--radius);
+}
+.flip-back {
+  transform: rotateY(180deg);
+  background: linear-gradient(145deg, rgba(217,164,65,0.14), rgba(255,255,255,0.02));
+  overflow-y: auto;
+}
+.review-quote {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: rgba(245, 242, 236, 0.9);
+  margin: 0;
+  /* Three lines, not four: at four the last line collided with the author
+     block and was sliced through the middle. */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* The back face is the whole point of the flip — it must NOT clamp.
+   Resetting -webkit-line-clamp alone is not enough while display is
+   -webkit-box, so the display mode is reset too. */
+.flip-back .review-quote {
+  display: block;
+  -webkit-line-clamp: none;
+  overflow: visible;
+  font-size: 0.9rem;
+}
+.review-author {
+  margin-top: 1.1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.review-author small {
+  display: block;
+  font-weight: 400;
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+.flip-hint {
+  position: absolute;
+  bottom: 0.9rem; right: 1.2rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+
+/* ==========================================================================
+   11b. 3D COMPOSITING FIX  — do not remove
+   --------------------------------------------------------------------------
+   `backdrop-filter` forces an element into its own flattened rendering
+   context. Two things break silently as a result:
+
+     • `transform-style: preserve-3d` on an ancestor stops applying, so
+       `translateZ()` on descendants does nothing;
+     • `backface-visibility: hidden` on the element itself stops working, so
+       Chrome paints the MIRRORED BACK FACE straight through the front — the
+       reversed text seen on the review cards.
+
+   `.glass` sets backdrop-filter, and both the tilt cards and the flip cards
+   use it. Anything taking part in a 3D transform therefore has it removed
+   here and gets a near-opaque gradient instead. Against this dark theme the
+   two are visually almost indistinguishable, and the blur was never visible
+   through a card that already had a solid backdrop behind it.
+
+   These rules must stay AFTER sections 08–11 so they win on source order.
+   ========================================================================== */
+
+.tilt-inner,
+.flip-face {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.tilt-inner.glass {
+  background: linear-gradient(145deg, rgba(37, 42, 54, 0.96), rgba(19, 22, 29, 0.96));
+}
+
+/* Re-stated after the rule above so signature cards keep their brass tint. */
+.service-card.signature {
+  background: linear-gradient(145deg, rgba(217, 164, 65, 0.16), rgba(28, 25, 19, 0.96));
+}
+
+.flip-face.glass {
+  background: linear-gradient(145deg, rgba(37, 42, 54, 0.98), rgba(19, 22, 29, 0.98));
+}
+
+.flip-back.glass {
+  background: linear-gradient(145deg, rgba(217, 164, 65, 0.2), rgba(30, 26, 18, 0.98));
+}
+
+
+/* ==========================================================================
+   12. GALLERY & PARALLAX
+   ========================================================================== */
+
+.parallax-band {
+  position: relative;
+  padding: 8rem 0;
+  overflow: hidden;
+  background: var(--ink-800);
+}
+/* Layers move at different rates; JS writes --shift on scroll. */
+.parallax-layer {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+  transform: translate3d(0, var(--shift, 0px), 0);
+  pointer-events: none;
+}
+
+.stat-grid { position: relative; z-index: 1; }
+.stat {
+  text-align: center;
+  padding: 1.5rem 1rem;
+}
+.stat .num {
+  display: block;
+  font-family: var(--font-display);
+  font-size: clamp(2.8rem, 7vw, 4.4rem);
+  line-height: 1;
+  background: var(--grad-brass);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.stat .lbl {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Gallery tiles — CSS-only 3D lift */
+.gallery-tile {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius);
+  overflow: hidden;
+  transform-style: preserve-3d;
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.gallery-tile:hover {
+  transform: translateY(-8px) rotateX(4deg) rotateY(-4deg) scale(1.02);
+  box-shadow: var(--shadow-lg);
+}
+.gallery-tile img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform var(--dur-slow) var(--ease);
+}
+.gallery-tile:hover img { transform: scale(1.08); }
+.gallery-tile figcaption {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 2.5rem 1.2rem 1.1rem;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  letter-spacing: 0.06em;
+  background: linear-gradient(to top, rgba(8,9,12,0.92), transparent);
+}
+
+
+/* ==========================================================================
+   13. CONTACT & FOOTER
+   ========================================================================== */
+
+.info-row {
+  display: flex;
+  gap: 1rem;
+  padding: 1.1rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.info-row:last-child { border-bottom: 0; }
+.info-row .ic {
+  flex-shrink: 0;
+  width: 42px; height: 42px;
+  display: grid; place-items: center;
+  color: var(--brass-400);
+  background: rgba(217, 164, 65, 0.1);
+  border-radius: 10px;
+}
+.info-row h4 {
+  margin: 0 0 0.15rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.info-row p { margin: 0; font-size: 0.95rem; }
+
+.hours-table { width: 100%; font-size: 0.9rem; }
+.hours-table td { padding: 0.42rem 0; border-bottom: 1px solid var(--line); }
+.hours-table td:last-child { text-align: right; color: var(--muted); }
+.hours-table tr.today td { color: var(--brass-400); font-weight: 600; }
+.hours-table tr.today td:last-child { color: var(--brass-400); }
+
+.map-frame {
+  height: 100%;
+  min-height: 340px;
+  border: 0;
+  border-radius: var(--radius);
+  /* Google's map is bright white; dial it into the dark theme. */
+  filter: grayscale(1) invert(0.92) contrast(0.85) hue-rotate(180deg);
+  transition: filter var(--dur) var(--ease);
+}
+.map-frame:hover { filter: none; }
+
+.site-footer {
+  padding: 4rem 0 2rem;
+  background: var(--ink-800);
+  border-top: 1px solid var(--line);
+}
+.footer-bottom {
+  margin-top: 3rem;
+  padding-top: 1.6rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+/* Floating WhatsApp / call button */
+.fab {
+  position: fixed;
+  right: 1.4rem; bottom: 1.4rem;
+  z-index: 1020;
+  width: 56px; height: 56px;
+  display: grid; place-items: center;
+  color: var(--ink-900);
+  background: var(--grad-brass);
+  border: 0;
+  border-radius: 50%;
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+}
+.fab:hover {
+  color: var(--ink-900);
+  transform: scale(1.08) translateY(-2px);
+  box-shadow: var(--glow-brass), var(--shadow-md);
+}
+
+
+/* ==========================================================================
+   14. TOASTS
+   ========================================================================== */
+
+.toast-stack {
+  position: fixed;
+  right: 1.2rem; top: calc(var(--nav-h) + 1rem);
+  z-index: 1080;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  max-width: min(360px, calc(100vw - 2.4rem));
+}
+.toast-msg {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.9rem 1.1rem;
+  font-size: 0.88rem;
+  background: var(--ink-600);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--brass-500);
+  border-radius: 10px;
+  box-shadow: var(--shadow-md);
+  animation: toastIn 0.35s var(--ease);
+}
+.toast-msg.ok    { border-left-color: var(--success); }
+.toast-msg.error { border-left-color: var(--danger); }
+.toast-msg.out   { animation: toastOut 0.3s var(--ease) forwards; }
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes toastOut {
+  to { opacity: 0; transform: translateX(24px); }
+}
+
+/* Inline spinner for async buttons */
+.spinner {
+  width: 15px; height: 15px;
+  border: 2px solid rgba(0, 0, 0, 0.25);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+
+/* ==========================================================================
+   15. RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 991.98px) {
+  .nav-toggle { display: block; }
+
+  /* Slide-down mobile menu */
+  .nav-links {
+    position: fixed;
+    inset: var(--nav-h) 0 auto 0;
+    flex-direction: column;
+    gap: 0;
+    padding: 1.5rem 0;
+    background: rgba(8, 9, 12, 0.97);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--line);
+    transform: translateY(-120%);
+    transition: transform var(--dur) var(--ease);
+  }
+  .nav-links.open { transform: none; }
+  .nav-links li { width: 100%; text-align: center; }
+  .nav-links a { display: block; padding: 0.9rem 1rem; font-size: 0.95rem; }
+  .nav-links a::after { display: none; }
+
+  .section { padding: 4.5rem 0; }
+  .booking-panel { padding: 1.4rem; }
+  .flip { height: 300px; }
+
+  /* Step labels crowd the bar on narrow screens — show numbers only. */
+  .step .txt { display: none; }
+}
+
+@media (max-width: 575.98px) {
+  .hero-inner { padding: 6rem 1rem 4rem; }
+  .hero-cta { flex-direction: column; align-items: stretch; }
+  .btn-brass, .btn-ghost { justify-content: center; }
+  .rating-summary { flex-direction: column; gap: 0.5rem; text-align: center; }
+  .rating-summary .meta { text-align: center; }
+  .slot-grid { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); }
+
+  /* Toasts move to the bottom on phones: at the top they cover the hero
+     headline, which is the first thing a visitor should see. Offset clears
+     the floating call button. */
+  .toast-stack {
+    top: auto;
+    bottom: 5.5rem;
+    left: 1.2rem;
+    right: 1.2rem;
+    max-width: none;
+    flex-direction: column-reverse;
+  }
+  .hero-rating { font-size: 0.78rem; padding: 0.55rem 1rem; }
+}
+
+
+/* ==========================================================================
+   16. MOTION & PRINT PREFERENCES
+   ========================================================================== */
+
+/* Honour the OS "reduce motion" setting: kill the decorative animation but
+   keep everything visible and usable. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  [data-reveal] { opacity: 1; transform: none; }
+  .tilt-inner { transform: none !important; }
+  .flip:hover .flip-inner { transform: none; }
+  .parallax-layer { transform: none !important; }
+}
+
+@media print {
+  .site-nav, .fab, #preloader, #hero-canvas, .scroll-cue, .toast-stack { display: none !important; }
+  body { background: #fff; color: #000; }
+}

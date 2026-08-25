@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- ==========================================================================
+     Sincere Men's Salon — Santacruz (West), Mumbai
+     --------------------------------------------------------------------------
+     Stack : HTML5 · Bootstrap 5 (grid/modal only) · vanilla JS (ES modules)
+             Three.js r160 (hero WebGL) · Node serverless API · Neon Postgres
+     Notes : No build step. Static files here, API functions in /api.
+     ========================================================================== -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#08090c">
+
+<title>Sincere Men's Salon — Barbershop in Santacruz West, Mumbai</title>
+<meta name="description" content="Haircuts, hot-towel shaves and head massage in Santacruz (West), Mumbai. Rated 4.2★ by 412 customers. Book your chair online in under a minute.">
+<meta name="keywords" content="men's salon Santacruz West, barber Mumbai, haircut Santacruz, hot towel shave Mumbai, head massage">
+
+<!-- Open Graph / social preview -->
+<meta property="og:type" content="business.business">
+<meta property="og:title" content="Sincere Men's Salon — Santacruz West, Mumbai">
+<meta property="og:description" content="Precision cuts, hot-towel shaves and the head massage regulars keep coming back for.">
+<meta property="og:locale" content="en_IN">
+
+<link rel="canonical" href="https://sinceremenssalon.in/">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+
+<!-- Preconnect to the font CDN before the CSS request discovers it. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="assets/css/style.css">
+
+<!--
+  Import map so scene3d.js can `import * as THREE from 'three'`.
+  Three.js is fetched only when the hero is about to render (see main.js) —
+  it is never on the critical path for first paint.
+-->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+  }
+}
+</script>
+
+<!-- Structured data: lets Google show hours, rating and location in results. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HairSalon",
+  "name": "Sincere Men's Salon",
+  "alternateName": "सिन्सियर मेन्स सलून",
+  "image": "assets/img/og-cover.svg",
+  "priceRange": "₹₹",
+  "telephone": "+91-98690-75367",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Shop No. 6, 75 Saraswati Road",
+    "addressLocality": "Santacruz West, Mumbai",
+    "addressRegion": "Maharashtra",
+    "postalCode": "400054",
+    "addressCountry": "IN"
+  },
+  "geo": { "@type": "GeoCoordinates", "latitude": 19.0814347, "longitude": 72.8359641 },
+  "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.2", "reviewCount": "412" },
+  "openingHoursSpecification": [
+    { "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
+      "opens": "09:00", "closes": "21:30" },
+    { "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Saturday","Sunday"],
+      "opens": "08:00", "closes": "22:00" }
+  ]
+}
+</script>
+</head>
+
+<body>
+
+<!-- ==========================================================================
+     PRELOADER — hidden by main.js once fonts and the first frame are ready
+     ========================================================================== -->
+<div id="preloader" role="status" aria-label="Loading">
+  <div class="loader-mark">
+    <svg class="scissors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="6" cy="6" r="3"></circle>
+      <circle cx="6" cy="18" r="3"></circle>
+      <line x1="20" y1="4" x2="8.12" y2="15.88"></line>
+      <line x1="14.47" y1="14.48" x2="20" y2="20"></line>
+      <line x1="8.12" y1="8.12" x2="12" y2="12"></line>
+    </svg>
+    <span>SINCERE</span>
+    <div class="loader-bar"><i></i></div>
+  </div>
+</div>
+
+<script>
+  /* Preloader safety net — a classic (non-module) script on purpose.
+     main.js hides the preloader as soon as the page settles, but if it never
+     runs at all — a blocked CDN, a script error, an old browser, or the page
+     opened over file:// where the browser refuses to load ES modules — the
+     visitor would otherwise be stuck staring at the loading screen forever.
+     This guarantees the content is reachable either way. */
+  setTimeout(function () {
+    var el = document.getElementById('preloader');
+    if (el && !el.classList.contains('done')) {
+      el.classList.add('done');
+      document.body.classList.remove('is-locked');
+      console.warn('[preloader] Released by fallback timer — main.js did not run. ' +
+                   'If you opened this file directly, serve it over http:// instead.');
+    }
+  }, 5000);
+</script>
+
+<a href="#main" class="sr-only skip-link">Skip to content</a>
+
+<!-- ==========================================================================
+     NAVIGATION
+     ========================================================================== -->
+<header class="site-nav" id="siteNav">
+  <div class="container d-flex align-items-center justify-content-between">
+
+    <a href="#hero" class="brand" aria-label="Sincere Men's Salon — home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <line x1="20" y1="4" x2="8.12" y2="15.88"></line>
+        <line x1="14.47" y1="14.48" x2="20" y2="20"></line>
+        <line x1="8.12" y1="8.12" x2="12" y2="12"></line>
+      </svg>
+      <span class="brand-text">
+        <b>SINCERE</b>
+        <small>Men's Salon</small>
+      </span>
+    </a>
+
+    <nav aria-label="Main">
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#services">Services</a></li>
+        <li><a href="#book">Book</a></li>
+        <li><a href="#reviews">Reviews</a></li>
+        <li><a href="#gallery">Gallery</a></li>
+        <li><a href="#visit">Visit</a></li>
+      </ul>
+    </nav>
+
+    <div class="d-flex align-items-center gap-3">
+      <!-- Live open/closed state, filled by JS from /api/info -->
+      <span class="status-pill d-none d-md-inline-flex" id="statusPill">
+        <span class="dot"></span><span class="txt">Checking…</span>
+      </span>
+      <a href="#book" class="btn-brass d-none d-lg-inline-flex">Book a Chair</a>
+
+      <button class="nav-toggle" id="navToggle" aria-expanded="false"
+              aria-controls="navLinks" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- ==========================================================================
+     HERO — Three.js scene renders into #hero-canvas
+     ========================================================================== -->
+<section class="hero" id="hero">
+  <canvas id="hero-canvas" aria-hidden="true"></canvas>
+
+  <div class="hero-inner">
+    <span class="hero-eyebrow">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <circle cx="12" cy="12" r="12"/>
+      </svg>
+      Santacruz West · Mumbai
+    </span>
+
+    <h1>
+      <span class="line">SHARP LOOKS,</span>
+      <span class="line fill">SINCERE HANDS</span>
+    </h1>
+
+    <p class="hero-hindi">सिन्सियर मेन्स सलून</p>
+
+    <p class="hero-sub">
+      A neighbourhood barbershop on Saraswati Road. Precision cuts, hot-towel
+      shaves, and the head massage our regulars have been coming back for
+      since long before we had a website.
+    </p>
+
+    <div class="hero-cta">
+      <a href="#book" class="btn-brass">
+        Book Your Chair
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline>
+        </svg>
+      </a>
+      <a href="#services" class="btn-ghost">See the Menu</a>
+    </div>
+
+    <div class="hero-rating">
+      <span class="stars" aria-hidden="true">★★★★☆</span>
+      <span><strong>4.2</strong> from <span id="ratingCount">412</span> Google reviews</span>
+    </div>
+  </div>
+
+  <div class="scroll-cue" aria-hidden="true">
+    <span class="track"></span>
+    Scroll
+  </div>
+</section>
+
+
+<!-- ==========================================================================
+     SERVICES — cards are rendered by main.js from /api/services
+     ========================================================================== -->
+<section class="section" id="services">
+  <div class="container">
+
+    <div class="section-head" data-reveal>
+      <span class="section-label">The Menu</span>
+      <h2>What We Do</h2>
+      <p>Honest prices, no upselling. Tap any service to add it to your booking.</p>
+      <div class="rule" aria-hidden="true">✦</div>
+    </div>
+
+    <!-- Category filter tabs -->
+    <div class="cat-tabs" id="catTabs" role="tablist" aria-label="Service categories" data-reveal></div>
+
+    <!-- Service card grid -->
+    <div class="row g-4" id="serviceGrid" aria-live="polite"></div>
+
+  </div>
+</section>
+
+
+<!-- ==========================================================================
+     STATS — parallax band
+     ========================================================================== -->
+<section class="parallax-band">
+  <!-- Decorative layers; JS writes --shift on each as the page scrolls. -->
+  <div class="parallax-layer" data-speed="0.18" aria-hidden="true"
+       style="background:radial-gradient(circle at 18% 30%, rgba(217,164,65,.10), transparent 45%)"></div>
+  <div class="parallax-layer" data-speed="-0.12" aria-hidden="true"
+       style="background:radial-gradient(circle at 82% 70%, rgba(217,164,65,.07), transparent 45%)"></div>
+
+  <div class="container">
+    <div class="row stat-grid">
+      <!-- data-count drives the roll-up animation on first scroll into view. -->
+      <div class="col-6 col-lg-3 stat" data-reveal style="--i:0">
+        <span class="num" data-count="412" data-suffix="+">0</span>
+        <span class="lbl">Google Reviews</span>
+      </div>
+      <div class="col-6 col-lg-3 stat" data-reveal style="--i:1">
+        <span class="num" data-count="4.2" data-decimals="1">0</span>
+        <span class="lbl">Average Rating</span>
+      </div>
+      <div class="col-6 col-lg-3 stat" data-reveal style="--i:2">
+        <span class="num" data-count="14" data-suffix="h">0</span>
+        <span class="lbl">Open Daily</span>
+      </div>
+      <div class="col-6 col-lg-3 stat" data-reveal style="--i:3">
+        <span class="num" data-count="4">0</span>
+        <span class="lbl">Chairs</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ==========================================================================
+     BOOKING — three-step flow
+     ========================================================================== -->
+<section class="section" id="book">
+  <div class="container">
+
+    <div class="section-head" data-reveal>
+      <span class="section-label">Reservations</span>
+      <h2>Book a Chair</h2>
+      <p>Sundays get busy. Reserve a slot and skip the wait.</p>
+      <div class="rule" aria-hidden="true">✦</div>
+    </div>
+
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        <div class="glass booking-panel" data-reveal>
+
+          <!-- Step indicator -->
+          <div class="steps" aria-hidden="true">
+            <div class="step active" data-step-dot="1"><span class="num">1</span><span class="txt">Services</span></div>
+            <div class="step-line" data-step-line="1"></div>
+            <div class="step" data-step-dot="2"><span class="num">2</span><span class="txt">Date &amp; Time</span></div>
+            <div class="step-line" data-step-line="2"></div>
+            <div class="step" data-step-dot="3"><span class="num">3</span><span class="txt">Your Details</span></div>
+          </div>
+
+          <!-- ---------- Step 1: cart ---------- -->
+          <div class="step-pane active" data-pane="1">
+            <div class="row g-4">
+              <div class="col-md-7">
+                <h3 class="mb-3" style="font-size:1.6rem">Your Selection</h3>
+                <ul class="cart-list" id="cartList"></ul>
+                <div class="cart-empty" id="cartEmpty">
+                  Nothing picked yet — choose from
+                  <a href="#services">the menu above</a>.
+                </div>
+              </div>
+
+              <div class="col-md-5">
+                <div class="cart-total">
+                  <span class="lbl">Total<br><small id="cartDuration" style="letter-spacing:0">—</small></span>
+                  <span class="amt" id="cartTotal">₹0</span>
+                </div>
+                <button class="btn-brass w-100 justify-content-center" id="toStep2" disabled>
+                  Choose a Time
+                </button>
+                <p class="text-center mt-3 mb-0" style="font-size:.78rem;color:var(--muted)">
+                  No prepayment. Pay at the salon.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ---------- Step 2: date & slot ---------- -->
+          <div class="step-pane" data-pane="2">
+            <h3 class="mb-3" style="font-size:1.6rem">Pick a Day</h3>
+            <div class="date-strip" id="dateStrip" role="group" aria-label="Choose a date"></div>
+
+            <h3 class="mb-3" style="font-size:1.6rem">Pick a Time</h3>
+            <div class="slot-grid" id="slotGrid" role="group" aria-label="Choose a time" aria-live="polite"></div>
+
+            <div class="d-flex gap-2 mt-4">
+              <button class="btn-ghost" data-back="1">Back</button>
+              <button class="btn-brass flex-grow-1 justify-content-center" id="toStep3" disabled>
+                Continue
+              </button>
+            </div>
+          </div>
+
+          <!-- ---------- Step 3: details ---------- -->
+          <div class="step-pane" data-pane="3">
+            <form id="bookingForm" novalidate>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="field" data-field="name">
+                    <label for="bkName">Name</label>
+                    <input type="text" id="bkName" name="name" autocomplete="name"
+                           placeholder="Your name" required>
+                    <span class="err"></span>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="field" data-field="phone">
+                    <label for="bkPhone">Mobile</label>
+                    <input type="tel" id="bkPhone" name="phone" inputmode="numeric"
+                           autocomplete="tel" placeholder="98765 43210" required>
+                    <span class="err"></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="field" data-field="email">
+                <label for="bkEmail">Email <span style="text-transform:none">(optional)</span></label>
+                <input type="email" id="bkEmail" name="email" autocomplete="email"
+                       placeholder="you@example.com">
+                <span class="err"></span>
+              </div>
+
+              <div class="field" data-field="notes">
+                <label for="bkNotes">Anything we should know? <span style="text-transform:none">(optional)</span></label>
+                <textarea id="bkNotes" name="notes" rows="3"
+                          placeholder="Preferred barber, style reference, allergies…"></textarea>
+                <span class="err"></span>
+              </div>
+
+              <!-- Summary of steps 1–2, filled by JS -->
+              <div class="glass p-3 mb-4" id="bookSummary" style="font-size:.9rem"></div>
+
+              <div class="d-flex gap-2">
+                <button type="button" class="btn-ghost" data-back="2">Back</button>
+                <button type="submit" class="btn-brass flex-grow-1 justify-content-center" id="submitBooking">
+                  Confirm Booking
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- ---------- Step 4: confirmation ---------- -->
+          <div class="step-pane" data-pane="4">
+            <div class="confirm-box">
+              <div class="confirm-tick">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </div>
+              <h3 style="font-size:2.2rem">You're Booked</h3>
+              <p style="color:var(--muted)">Show this reference at the counter.</p>
+              <div class="confirm-ref" id="confirmRef">—</div>
+              <div id="confirmDetail" style="color:var(--muted);font-size:.92rem"></div>
+              <div class="d-flex gap-2 justify-content-center flex-wrap mt-4">
+                <a class="btn-brass" id="waConfirm" target="_blank" rel="noopener">Send on WhatsApp</a>
+                <button class="btn-ghost" id="bookAnother">Book Another</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ==========================================================================
+     REVIEWS — flip cards, loaded from /api/reviews
+     ========================================================================== -->
+<section class="section" id="reviews" style="background:var(--ink-800)">
+  <div class="container">
+
+    <div class="section-head" data-reveal>
+      <span class="section-label">Word of Mouth</span>
+      <h2>What Mumbai Says</h2>
+      <p>Straight from our Google listing. Hover a card to read the full note.</p>
+      <div class="rule" aria-hidden="true">✦</div>
+    </div>
+
+    <div class="text-center" data-reveal>
+      <div class="glass rating-summary">
+        <span class="big">4.2</span>
+        <span class="meta">
+          <span class="stars" aria-hidden="true">★★★★☆</span><br>
+          Based on <b id="reviewCount">412</b> Google ratings<br>
+          <a href="https://maps.app.goo.gl/BoHVJzyorGZdLb2Y8" target="_blank" rel="noopener">
+            Read them all on Google →
+          </a>
+        </span>
+      </div>
+    </div>
+
+    <div class="row g-4" id="reviewGrid" aria-live="polite"></div>
+
+    <div class="text-center mt-5" data-reveal>
+      <button class="btn-ghost" data-bs-toggle="modal" data-bs-target="#reviewModal">
+        Leave a Review
+      </button>
+    </div>
+  </div>
+</section>
+
+
+<!-- ==========================================================================
+     GALLERY
+     ========================================================================== -->
+<section class="section" id="gallery">
+  <div class="container">
+    <div class="section-head" data-reveal>
+      <span class="section-label">The Shop</span>
+      <h2>Inside Sincere</h2>
+      <p>Four chairs, air-conditioned, and a TV that is usually showing cricket.</p>
+      <div class="rule" aria-hidden="true">✦</div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-4" data-reveal style="--i:0">
+        <figure class="gallery-tile m-0">
+          <img src="assets/img/shot-1.svg" alt="The cutting floor at Sincere Men's Salon" loading="lazy" width="800" height="600">
+          <figcaption>The Cutting Floor</figcaption>
+        </figure>
+      </div>
+      <div class="col-md-6 col-lg-4" data-reveal style="--i:1">
+        <figure class="gallery-tile m-0">
+          <img src="assets/img/shot-2.svg" alt="Hot towel shave station" loading="lazy" width="800" height="600">
+          <figcaption>Hot Towel Station</figcaption>
+        </figure>
+      </div>
+      <div class="col-md-6 col-lg-4" data-reveal style="--i:2">
+        <figure class="gallery-tile m-0">
+          <img src="assets/img/shot-3.svg" alt="Grooming products shelf" loading="lazy" width="800" height="600">
+          <figcaption>The Shelf</figcaption>
+        </figure>
+      </div>
+      <div class="col-md-6 col-lg-4" data-reveal style="--i:3">
+        <figure class="gallery-tile m-0">
+          <img src="assets/img/shot-4.svg" alt="Waiting area" loading="lazy" width="800" height="600">
+          <figcaption>Waiting Area</figcaption>
+        </figure>
+      </div>
+      <div class="col-md-6 col-lg-4" data-reveal style="--i:4">
+        <figure class="gallery-tile m-0">
+          <img src="assets/img/shot-5.svg" alt="Barber tools laid out" loading="lazy" width="800" height="600">
+          <figcaption>Tools of the Trade</figcaption>
+        </figure>
+      </div>
+      <div class="col-md-6 col-lg-4" data-reveal style="--i:5">
+        <figure class="gallery-tile m-0">
+          <img src="assets/img/shot-6.svg" alt="Shop front on Saraswati Road" loading="lazy" width="800" height="600">
+          <figcaption>Saraswati Road</figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <p class="text-center mt-4 mb-0" style="font-size:.8rem;color:var(--muted)" data-reveal>
+      Illustrations shown — swap the files in <code>assets/img/</code> for real photographs of the shop.
+    </p>
+  </div>
+</section>
+
+
+<!-- ==========================================================================
+     VISIT — contact, hours, map
+     ========================================================================== -->
+<section class="section" id="visit" style="background:var(--ink-800)">
+  <div class="container">
+
+    <div class="section-head" data-reveal>
+      <span class="section-label">Find Us</span>
+      <h2>Come In</h2>
+      <p>Walk-ins welcome. Booking just means you won't wait.</p>
+      <div class="rule" aria-hidden="true">✦</div>
+    </div>
+
+    <div class="row g-4">
+
+      <!-- Contact details -->
+      <div class="col-lg-4" data-reveal style="--i:0">
+        <div class="glass p-4 h-100">
+          <div class="info-row">
+            <span class="ic" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+            </span>
+            <div>
+              <h4>Address</h4>
+              <p>Shop No. 6, 75 Saraswati Road,<br>Santacruz (West), Mumbai 400054</p>
+              <a href="https://maps.app.goo.gl/BoHVJzyorGZdLb2Y8" target="_blank" rel="noopener"
+                 style="font-size:.85rem">Open in Google Maps →</a>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <span class="ic" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"></path>
+              </svg>
+            </span>
+            <div>
+              <h4>Phone</h4>
+              <p><a href="tel:+919869075367">+91 98690 75367</a></p>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <span class="ic" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </span>
+            <div class="w-100">
+              <h4>Hours</h4>
+              <table class="hours-table" id="hoursTable"><tbody></tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Enquiry form -->
+      <div class="col-lg-4" data-reveal style="--i:1">
+        <div class="glass p-4 h-100">
+          <h3 class="mb-3" style="font-size:1.6rem">Send a Message</h3>
+          <form id="contactForm" novalidate>
+            <div class="field" data-field="name">
+              <label for="ctName">Name</label>
+              <input type="text" id="ctName" name="name" autocomplete="name" required>
+              <span class="err"></span>
+            </div>
+            <div class="field" data-field="phone">
+              <label for="ctPhone">Mobile</label>
+              <input type="tel" id="ctPhone" name="phone" inputmode="numeric" autocomplete="tel" required>
+              <span class="err"></span>
+            </div>
+            <div class="field" data-field="message">
+              <label for="ctMessage">Message</label>
+              <textarea id="ctMessage" name="message" rows="4" required></textarea>
+              <span class="err"></span>
+            </div>
+
+            <!-- Honeypot: hidden from people, irresistible to bots. -->
+            <div class="hp-field" aria-hidden="true">
+              <label for="ctWebsite">Website</label>
+              <input type="text" id="ctWebsite" name="website" tabindex="-1" autocomplete="off">
+            </div>
+
+            <button type="submit" class="btn-brass w-100 justify-content-center">Send</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Map -->
+      <div class="col-lg-4" data-reveal style="--i:2">
+        <iframe
+          class="map-frame w-100"
+          title="Map showing Sincere Men's Salon on Saraswati Road, Santacruz West"
+          src="https://maps.google.com/maps?q=19.0814347,72.8359641&z=17&output=embed"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          allowfullscreen></iframe>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+</main>
+
+
+<!-- ==========================================================================
+     FOOTER
+     ========================================================================== -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-5">
+        <a href="#hero" class="brand mb-3">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle>
+            <line x1="20" y1="4" x2="8.12" y2="15.88"></line>
+            <line x1="14.47" y1="14.48" x2="20" y2="20"></line>
+            <line x1="8.12" y1="8.12" x2="12" y2="12"></line>
+          </svg>
+          <span class="brand-text"><b>SINCERE</b><small>Men's Salon</small></span>
+        </a>
+        <p style="color:var(--muted);max-width:340px;font-size:.92rem">
+          A men's salon on Saraswati Road, Santacruz (West). Cuts, shaves and
+          head massage — done properly, priced fairly.
+        </p>
+      </div>
+
+      <div class="col-6 col-lg-2">
+        <h4 style="font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)">Explore</h4>
+        <ul class="list-unstyled" style="font-size:.9rem;line-height:2.1">
+          <li><a href="#services">Services</a></li>
+          <li><a href="#book">Book</a></li>
+          <li><a href="#reviews">Reviews</a></li>
+          <li><a href="#gallery">Gallery</a></li>
+        </ul>
+      </div>
+
+      <div class="col-6 col-lg-2">
+        <h4 style="font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)">Contact</h4>
+        <ul class="list-unstyled" style="font-size:.9rem;line-height:2.1">
+          <li><a href="tel:+919869075367">+91 98690 75367</a></li>
+          <li><a href="https://maps.app.goo.gl/BoHVJzyorGZdLb2Y8" target="_blank" rel="noopener">Directions</a></li>
+          <li><a href="/admin/">Staff Login</a></li>
+        </ul>
+      </div>
+
+      <div class="col-lg-3">
+        <h4 style="font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)">Today</h4>
+        <p id="footerHours" style="font-size:.9rem;color:var(--muted)">—</p>
+        <a href="#book" class="btn-brass mt-2">Book Now</a>
+      </div>
+    </div>
+
+    <div class="footer-bottom d-flex flex-wrap justify-content-between gap-2">
+      <span>© <span id="year">2026</span> Sincere Men's Salon · सिन्सियर मेन्स सलून</span>
+      <span>Santacruz West, Mumbai 400054</span>
+    </div>
+  </div>
+</footer>
+
+
+<!-- Floating call button -->
+<a href="tel:+919869075367" class="fab" aria-label="Call the salon">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+       stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"></path>
+  </svg>
+</a>
+
+<!-- Toast container -->
+<div class="toast-stack" id="toastStack" role="status" aria-live="polite"></div>
+
+
+<!-- ==========================================================================
+     REVIEW MODAL
+     ========================================================================== -->
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content glass" style="background:var(--ink-700)">
+      <div class="modal-header border-0">
+        <h3 class="modal-title" id="reviewModalTitle" style="font-size:1.8rem">Leave a Review</h3>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="reviewForm" novalidate>
+          <div class="field" data-field="author">
+            <label for="rvName">Your Name</label>
+            <input type="text" id="rvName" name="author" required>
+            <span class="err"></span>
+          </div>
+
+          <div class="field" data-field="rating">
+            <label for="rvRating">Rating</label>
+            <select id="rvRating" name="rating" required>
+              <option value="5">★★★★★ — Excellent</option>
+              <option value="4">★★★★☆ — Good</option>
+              <option value="3">★★★☆☆ — Okay</option>
+              <option value="2">★★☆☆☆ — Poor</option>
+              <option value="1">★☆☆☆☆ — Bad</option>
+            </select>
+            <span class="err"></span>
+          </div>
+
+          <div class="field" data-field="body">
+            <label for="rvBody">Your Experience</label>
+            <textarea id="rvBody" name="body" rows="4" required
+                      placeholder="What did we get right, or wrong?"></textarea>
+            <span class="err"></span>
+          </div>
+
+          <p style="font-size:.78rem;color:var(--muted)">
+            Reviews are published after a quick check by our team.
+          </p>
+          <button type="submit" class="btn-brass w-100 justify-content-center">Submit</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ==========================================================================
+     SCRIPTS
+     Bootstrap is deferred; main.js is a module (deferred by default) and
+     dynamically imports the Three.js scene only when the hero is visible.
+     ========================================================================== -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+<script type="module" src="assets/js/main.js"></script>
+
+</body>
+</html>

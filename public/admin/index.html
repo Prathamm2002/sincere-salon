@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- ==========================================================================
+     Admin dashboard — bookings, review moderation, enquiries
+     --------------------------------------------------------------------------
+     A static page that talks to /api/admin. The original was server-rendered
+     PHP; that could not survive the move to a serverless runtime, where there
+     is no session store and no request-time templating. Auth is a signed,
+     HttpOnly cookie issued by /api/admin/login.
+     ========================================================================== -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Dashboard — Sincere Men's Salon</title>
+<link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/assets/css/style.css">
+<style>
+  /* Dashboard-only styles, scoped here rather than bloating the site sheet. */
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
+  .bar { position: sticky; top: 0; z-index: 10; background: var(--ink-800);
+         border-bottom: 1px solid var(--line); }
+  .bar-in { display: flex; align-items: center; justify-content: space-between;
+            padding: 1rem 0; gap: 1rem; flex-wrap: wrap; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+           gap: 1rem; margin: 1.5rem 0; }
+  .tile { padding: 1rem; border-radius: var(--radius); background: var(--ink-700);
+          border: 1px solid var(--line); }
+  .tile b { display: block; font-family: var(--font-display); font-size: 2.1rem;
+            line-height: 1; color: var(--brass-400); }
+  .tile span { display: block; margin-top: .3rem; font-size: .66rem; letter-spacing: .14em;
+               text-transform: uppercase; color: var(--muted); }
+  .tabs { display: flex; gap: .25rem; border-bottom: 1px solid var(--line); margin-bottom: 1.5rem;
+          overflow-x: auto; }
+  .tab { padding: .6rem 1.2rem; font-size: .8rem; font-weight: 600; letter-spacing: .08em;
+         text-transform: uppercase; color: var(--muted); background: none; border: 0;
+         border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; }
+  .tab.on { color: var(--brass-400); border-bottom-color: var(--brass-500); }
+  .panel { background: var(--ink-700); border: 1px solid var(--line);
+           border-radius: var(--radius); padding: .5rem 1rem; overflow-x: auto; }
+  table { width: 100%; font-size: .88rem; border-collapse: collapse; }
+  th { padding: .7rem .6rem; font-size: .68rem; letter-spacing: .12em; text-transform: uppercase;
+       color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--line); text-align: left; }
+  td { padding: .8rem .6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr.flag td { background: rgba(217,164,65,.06); }
+  .chip { display: inline-block; padding: .16rem .6rem; font-size: .68rem; font-weight: 700;
+          letter-spacing: .08em; text-transform: uppercase; border: 1px solid currentColor;
+          border-radius: 999px; }
+  .mini { padding: .3rem .7rem; font-size: .74rem; font-weight: 600; color: var(--paper);
+          background: rgba(255,255,255,.05); border: 1px solid var(--line); border-radius: 6px;
+          cursor: pointer; transition: all .18s var(--ease); }
+  .mini:hover { border-color: var(--brass-500); color: var(--brass-400); }
+  .mini.danger:hover { border-color: var(--danger); color: var(--danger); }
+  .row-actions { display: flex; gap: .4rem; flex-wrap: wrap; }
+  .center { display: grid; place-items: center; min-height: 100vh; padding: 2rem; }
+  .hidden { display: none !important; }
+  .note { padding: .8rem 1rem; border-radius: 10px; font-size: .85rem; margin-bottom: 1rem; }
+  .note.err { background: rgba(248,113,113,.12); border: 1px solid var(--danger); color: var(--danger); }
+</style>
+</head>
+<body>
+
+<!-- ---------- Login ---------- -->
+<div class="center" id="loginView">
+  <div class="glass" style="width:min(400px,100%);padding:2rem">
+    <div style="text-align:center;margin-bottom:1.5rem">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--brass-400)"
+           stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle>
+        <line x1="20" y1="4" x2="8.12" y2="15.88"></line>
+        <line x1="14.47" y1="14.48" x2="20" y2="20"></line>
+        <line x1="8.12" y1="8.12" x2="12" y2="12"></line>
+      </svg>
+      <h1 style="font-size:2rem;margin-top:.6rem">Staff Login</h1>
+      <p style="color:var(--muted);font-size:.85rem;margin:0">Sincere Men's Salon</p>
+    </div>
+
+    <div class="note err hidden" id="loginError"></div>
+
+    <form id="loginForm">
+      <div class="field">
+        <label for="u">Username</label>
+        <input type="text" id="u" name="username" autocomplete="username" required autofocus>
+      </div>
+      <div class="field">
+        <label for="p">Password</label>
+        <input type="password" id="p" name="password" autocomplete="current-password" required>
+      </div>
+      <button class="btn-brass w-100" style="width:100%;justify-content:center">Sign In</button>
+    </form>
+
+    <p style="text-align:center;margin-top:1.5rem;margin-bottom:0">
+      <a href="/" style="font-size:.82rem">← Back to the website</a>
+    </p>
+  </div>
+</div>
+
+<!-- ---------- Dashboard ---------- -->
+<div id="dashView" class="hidden">
+  <header class="bar">
+    <div class="wrap bar-in">
+      <div>
+        <b style="font-family:var(--font-display);font-size:1.4rem;letter-spacing:.08em">SINCERE</b>
+        <span style="color:var(--muted);font-size:.8rem"> · Dashboard</span>
+      </div>
+      <div style="display:flex;gap:.6rem;align-items:center">
+        <a href="/" class="mini" style="text-decoration:none">View Site</a>
+        <button class="mini danger" id="signOut">Sign Out</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="tiles" id="tiles"></div>
+
+    <nav class="tabs">
+      <button class="tab on" data-tab="bookings">Bookings</button>
+      <button class="tab" data-tab="reviews">Reviews</button>
+      <button class="tab" data-tab="messages">Messages</button>
+    </nav>
+
+    <div class="panel" id="panel">Loading…</div>
+  </div>
+</div>
+
+<div class="toast-stack" id="toastStack" role="status" aria-live="polite"></div>
+
+<script type="module" src="/assets/js/admin.js"></script>
+</body>
+</html>

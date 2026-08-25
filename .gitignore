@@ -1,0 +1,23 @@
+# Secrets — never commit
+.env
+.env.local
+.env*.local
+
+# Dependencies
+node_modules/
+
+# Vercel
+.vercel/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Local test scratch
+/tmp/

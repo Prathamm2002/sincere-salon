@@ -1,0 +1,16 @@
+{
+  "name": "sincere-mens-salon",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Booking website for Sincere Men's Salon, Santacruz West, Mumbai",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "db:setup": "node scripts/db-setup.js",
+    "hash-password": "node scripts/hash-password.js",
+    "test": "node tests/run.mjs"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4"
+  }
+}
