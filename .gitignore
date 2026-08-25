@@ -2,6 +2,7 @@
 .env
 .env.local
 .env*.local
+package-lock.json
 
 # Dependencies
 node_modules/
